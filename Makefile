@@ -5,7 +5,7 @@ PORT?=8000
 RELEASE?=0.0.1
 COMMIT?=$(shell git rev-parse --short HEAD)
 BUILD_TIME?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-CONTAINER_IMAGE?=docker.io/webdeva/${APP}
+CONTAINER_IMAGE?=docker.io/hurner/${APP}
 
 GOOS?=linux
 GOARCH?=amd64
@@ -26,7 +26,7 @@ run: container
 	docker stop $(APP):$(RELEASE) || true && docker rm $(APP):$(RELEASE) || true
 	docker run --name ${APP} -p ${PORT}:${PORT} --rm \
 		-e "PORT=${PORT}" \
-		$(APP):$(RELEASE)
+		$(CONTAINER_IMAGE):$(RELEASE)
 
 test:
 	go test -v -race ./...
@@ -41,4 +41,4 @@ minikube: push
         	gsed -E "s/\{\{(\s*)\.ServiceName(\s*)\}\}/$(APP)/g"; \
         echo ---; \
     done > tmp.yaml
-	kubectl apply -f tmp.yaml
+	kubectl --insecure-skip-tls-verify apply -f tmp.yaml

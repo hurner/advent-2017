@@ -5,8 +5,9 @@ metadata:
     kubernetes.io/ingress.class: nginx
     ingress.kubernetes.io/rewrite-target: /
   labels:
-    app: {{ .ServiceName }}
-  name: {{ .ServiceName }}
+    app: {{ .ServiceName }}-ingress
+  name: {{ .ServiceName }}-ingress
+  namespace: ingress-nginx
 spec:
   backend:
     serviceName: {{ .ServiceName }}

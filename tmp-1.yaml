@@ -1,0 +1,103 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: advent
+  namespace: ingress-nginx
+  labels:
+    app: advent
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: advent
+    spec:
+      containers:
+      - name: advent
+        image: docker.io/hurner/advent:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8000
+        resources:
+          limits:
+            cpu: 10m
+            memory: 30Mi
+          requests:
+            cpu: 10m
+            memory: 30Mi
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        effect: "NoSchedule"
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/rewrite-target: /
+  labels:
+    app: advent-ingress
+  name: advent-ingress
+  namespace: ingress-nginx
+spec:
+  backend:
+    serviceName: advent
+    servicePort: 80
+  rules:
+  - host: advent.test
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: advent
+          servicePort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: advent
+  namespace: ingress-nginx
+  labels:
+    app: advent
+spec:
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: advent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: advent-output
+  labels:
+    app.kubernetes.io/name: advent
+    app.kubernetes.io/part-of: advent
+  namespace: ingress-nginx
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    nodePort: 30010
+    targetPort: 80
+    port: 80
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
