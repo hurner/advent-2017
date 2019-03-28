@@ -34,7 +34,7 @@ test:
 push: container
 	docker push $(CONTAINER_IMAGE):$(RELEASE)
 
-minikube: push
+k8s: push
 	for t in $(shell find ./kubernetes/advent -type f -name "*.yaml"); do \
         cat $$t | \
         	gsed -E "s/\{\{(\s*)\.Release(\s*)\}\}/$(RELEASE)/g" | \
